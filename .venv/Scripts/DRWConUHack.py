@@ -45,23 +45,27 @@ ax.set_title("Percentage of Metro Incidents by Line")
 # Display Pie Chart in Streamlit
 st.pyplot(fig)
 
-# Count Incidents per Hour
-incident_by_hour = df["Heure de l'incident"].value_counts().sort_index()
+# Count Incidents per Hour with Metro Line
+incident_by_hour_line = df.groupby(["Heure de l'incident", "Ligne"]).size().unstack(fill_value=0)
+
+# Filter only the 4 metro lines
+incident_by_hour_line = incident_by_hour_line[["Ligne orange", "Ligne bleue", "Ligne jaune", "Ligne verte"]]
 
 # Show Data in Table for Peak Hours
-st.subheader("⏰ Peak Hours for Metro Incidents")
-if incident_by_hour.empty:
-    st.warning("\ud83d\udea8 Warning: No valid timestamps found in 'Heure de l'incident'. Check CSV format!")
-else:
-    st.write(incident_by_hour)
+#st.subheader("⏰ Peak Hours for Metro Incidents")
+#if incident_by_hour_line.empty:
+ #   st.warning("\ud83d\udea8 Warning: No valid timestamps found in 'Heure de l'incident'. Check CSV format!")
+#else:
+  #  st.write(incident_by_hour_line)
 
-# Bar Chart for Incident Distribution by Hour
+# Bar Chart for Incident Distribution by Hour with Metro Line
 st.subheader("📈 Incident Distribution by Hour")
 fig, ax = plt.subplots()
-incident_by_hour.plot(kind='bar', ax=ax, color='skyblue')
+incident_by_hour_line.plot(kind='line', ax=ax, color=[color_map.get(line, "gray") for line in incident_by_hour_line.columns])
 ax.set_xlabel("Hour of the Day")
 ax.set_ylabel("Number of Incidents")
-ax.set_title("Incidents by Hour")
+ax.set_title("Incidents by Hour and Metro Line")
+ax.legend(title="Metro Line")
 st.pyplot(fig)
 
 # Dropdown to Select Metro Line (filtered to specific lines)
@@ -77,14 +81,16 @@ st.dataframe(filtered_df.head(10))
 
 # Incidents by Month/Year
 df["Année civile"] = pd.to_datetime(df["Année civile"], format="%Y")
-incidents_by_year = df.groupby(df["Année civile"].dt.year).size()
+df["Month_Year"] = df["Année civile"].dt.to_period('M').astype(str)
+incidents_by_month_year = df.groupby("Month_Year").size()
 
-st.subheader("📅 Incidents by Year")
+st.subheader("📅 Incidents by Month and Year")
 fig, ax = plt.subplots()
-incidents_by_year.plot(kind='line', ax=ax, marker='o')
-ax.set_xlabel("Year")
+incidents_by_month_year.plot(kind='line', ax=ax, marker='o')
+ax.set_xlabel("Month and Year")
 ax.set_ylabel("Number of Incidents")
-ax.set_title("Incidents by Year")
+ax.set_title("Incidents by Month and Year")
+plt.xticks(rotation=45)
 st.pyplot(fig)
 
 # Incidents by Station
@@ -111,12 +117,12 @@ st.pyplot(fig)
 
 # Incident Duration Analysis
 df["Heure de reprise"] = pd.to_datetime(df["Heure de reprise"], format="%H:%M", errors='coerce').dt.hour
-df["Incident Duration"] = df["Heure de reprise"] - df["Heure de l'incident"]
+df["Incident Duration"] = (df["Heure de reprise"] - df["Heure de l'incident"]) * 60  # Convert to minutes
 
 st.subheader("⏳ Incident Duration Analysis")
 fig, ax = plt.subplots()
 df["Incident Duration"].plot(kind='hist', ax=ax, bins=20, color='purple')
-ax.set_xlabel("Incident Duration (hours)")
+ax.set_xlabel("Incident Duration (minutes)")
 ax.set_ylabel("Frequency")
 ax.set_title("Distribution of Incident Durations")
 st.pyplot(fig)
