@@ -40,7 +40,7 @@ pip install pandas numpy streamlit matplotlib seaborn plotly datetime scikit-lea
 
 ### 4. CSV File
 
-Ensure that the CSV file is located in the Scripts folder in your project directory. The code will use this file for processing.
+Ensure that the CSV file is located in the Scripts folder in your project directory. The code will use this file for processing. Code is located at .venv/Scripts/DRWConUHack.py .  
 
 ### 5. Run the Project
 
